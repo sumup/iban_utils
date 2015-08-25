@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    iban_utils (0.0.0)
+    iban_utils (0.1.0)
       libxml-ruby (= 2.7.0)
 
 GEM
@@ -24,3 +24,6 @@ PLATFORMS
 DEPENDENCIES
   iban_utils!
   rspec (~> 2.12)
+
+BUNDLED WITH
+   1.10.5

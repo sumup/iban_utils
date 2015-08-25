@@ -9,6 +9,12 @@ class IbanValidation
   end
 
   def validate(iban)
+    validate_and_get_info(iban)
+
+    @response.passed?
+  end
+
+  def validate_and_get_info(iban)
     # no need to send a validation request for an obviously invalid ibans
     unless iban && iban.is_a?(String) && !iban.gsub(/\s/, '').empty?
       raise "Iban validation failed due to: No iban provided!"
@@ -16,7 +22,5 @@ class IbanValidation
 
     request = IbanRequest.new(@config)
     @response = request.submit(@params.merge('iban' => iban))
-
-    @response.passed?
   end
 end
