@@ -18,4 +18,15 @@ class IbanGenerator
 
     response.details[:iban]
   end
+
+  def generate_and_get_response(country_code, account_number, bank_code=nil)
+    @params['country'] = country_code
+    @params['account'] = account_number
+    @params['bankcode'] = bank_code || ""
+
+    request = IbanRequest.new(@config)
+    @response = request.submit(@params)
+
+    response.details
+  end
 end
