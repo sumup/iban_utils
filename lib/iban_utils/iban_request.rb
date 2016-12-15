@@ -7,10 +7,11 @@ class IbanRequest
     @uri = URI.parse(config['url'])
     @ssl_verify = config['ssl_verify']
     @params = { 'user' => config['user'], 'password' => config['password'] }
+    @config = config
   end
 
   def submit(params)
-    http = IbanRequest.http(@uri)
+    http = IbanRequest.http(@uri, @config)
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @ssl_verify
 
     @request = Net::HTTP::Post.new(@uri.request_uri)
@@ -39,7 +40,7 @@ class IbanRequest
   #   If the host or port of any previously initialized client differ from
   #   the given URL, the previous session will be finished and new one
   #   started.
-  def self.http(uri)
+  def self.http(uri, opts = {})
     client = @@http_client
     return client if same_endpoint?(client, uri)
 
@@ -47,7 +48,12 @@ class IbanRequest
 
     client = Net::HTTP.new(uri.host, uri.port)
     client.use_ssl = true if uri.scheme == 'https'
-    client.keep_alive_timeout = 15
+    opts.each do |name, value|
+      writer_name = "#{name}="
+      if client.respond_to?(writer_name)
+        client.public_send(writer_name, value)
+      end
+    end
     client.start
     @@http_client = client
   end
