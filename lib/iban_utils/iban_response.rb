@@ -1,4 +1,4 @@
-require 'xml'
+require 'nokogiri'
 
 class IbanResponse
   attr_accessor :return_code, :return_message, :comment, :details, :raw
@@ -6,8 +6,8 @@ class IbanResponse
   def initialize(http_response)
     @raw = http_response
     body = http_response.body.strip
-    xml_string = XML::Parser.string(body, :encoding => XML::Encoding::UTF_8)
-    parse(xml_string.parse)
+    doc = Nokogiri::XML(body, nil, 'UTF-8')
+    parse(doc)
   end
 
   def found?
@@ -30,29 +30,29 @@ class IbanResponse
 
   def parse(response_xml)
     # The result is either a string "passed" or "failed" or "failed+reason"
-    @return_message = response_xml.find_first('result').content.downcase
-    @return_code = response_xml.find_first('return_code').content.to_i
+    @return_message = response_xml.xpath('//result').last.content.downcase
+    @return_code = response_xml.xpath('//return_code')&.first&.content.to_i
     @details = {}
 
     if found?
-      @details[:bank] = response_xml.find_first('bank').content
-      @details[:bank_address] = response_xml.find_first('bank_address').content
+      @details[:bank] = response_xml.xpath('//bank')&.first&.content
+      @details[:bank_address] = response_xml.xpath('//bank_address')&.first&.content
 
-      xml_iban = response_xml.find_first('iban')
+      xml_iban = response_xml.xpath('//iban')
 
       # What if we get more than one iban?
-      # o_iban = [*xml_iban].length > 1 ? nil : (xml_iban.content.empty? ? nil : xml_iban.content)
-      @details[:iban] = xml_iban.content.empty? ? nil : xml_iban.content
+      # o_iban = [*xml_iban].length > 1 ? nil : (xml_iban&.first&.content&.empty? ? nil : xml_iban&.first&.content)
+      @details[:iban] = xml_iban&.first&.content&.empty? ? nil : xml_iban&.first&.content
 
-      xml_account_number = response_xml.find_first('account_number')
-      @details[:account_number] = xml_account_number.content.empty? ? nil : xml_account_number.content
+      xml_account_number = response_xml.xpath('//account_number')
+      @details[:account_number] = xml_account_number&.first&.content&.empty? ? nil : xml_account_number&.first&.content
 
-      xml_bank_code = response_xml.find_first('bank_code')
-      @details[:bank_code] = xml_bank_code.content.empty? ? nil : xml_bank_code.content
+      xml_bank_code = response_xml.xpath('//bank_code')
+      @details[:bank_code] = xml_bank_code&.first&.content&.empty? ? nil : xml_bank_code&.first&.content
 
-      swift_candidates = response_xml.find_first('bic_candidates-list')
+      swift_candidates = response_xml.xpath('//bic_candidates-list')
       @details[:possible_bics] = swift_candidates ?
-        swift_candidates.find('bic_candidates/bic').map { |v| v.content } : []
+        swift_candidates.xpath('bic_candidates/bic').map { |v| v.content } : []
 
       # if we receive more than one swift, save the swift as nil, otherwise save the single swift.
       @details[:swift] = @details[:possible_bics].first if @details[:possible_bics].size == 1
