@@ -18,5 +18,5 @@ Gem::Specification.new do |gem|
   gem.require_path = "lib"
 
   # Dependencies
-  gem.add_dependency 'libxml-ruby', '~> 2.9'
+  gem.add_dependency 'libxml-ruby', '2.7.0'
 end
