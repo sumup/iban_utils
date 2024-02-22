@@ -35,20 +35,20 @@ class IbanResponse
     @details = {}
 
     if found?
-      @details[:bank] = response_xml.find_first('bank').content
-      @details[:bank_address] = response_xml.find_first('bank_address').content
+      @details[:bank] = response_xml.find_first('bank')&.content
+      @details[:bank_address] = response_xml.find_first('bank_address')&.content
 
       xml_iban = response_xml.find_first('iban')
 
       # What if we get more than one iban?
       # o_iban = [*xml_iban].length > 1 ? nil : (xml_iban.content.empty? ? nil : xml_iban.content)
-      @details[:iban] = xml_iban.content.empty? ? nil : xml_iban.content
+      @details[:iban] = xml_iban&.content&.empty? ? nil : xml_iban.content
 
       xml_account_number = response_xml.find_first('account_number')
-      @details[:account_number] = xml_account_number.content.empty? ? nil : xml_account_number.content
+      @details[:account_number] = xml_account_number&.content&.empty? ? nil : xml_account_number.content
 
       xml_bank_code = response_xml.find_first('bank_code')
-      @details[:bank_code] = xml_bank_code.content.empty? ? nil : xml_bank_code.content
+      @details[:bank_code] = xml_bank_code&.content&.empty? ? nil : xml_bank_code.content
 
       swift_candidates = response_xml.find_first('bic_candidates-list')
       @details[:possible_bics] = swift_candidates ?
